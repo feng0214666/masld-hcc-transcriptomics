@@ -1,0 +1,18 @@
+datasets:
+  GSE126848:
+    role: discovery
+    disease_context: MASLD severity
+    status: pending_metadata_audit
+    url: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE126848
+
+  GSE225740:
+    role: histology_validation
+    disease_context: disease activity and fibrosis
+    status: pending_metadata_audit
+    url: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE225740
+
+  GSE164441:
+    role: cancer_evaluation
+    disease_context: MASLD-associated HCC
+    status: pending_metadata_audit
+    url: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE164441
