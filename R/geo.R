@@ -10,7 +10,7 @@ parse_geo_soft <- function(lines) {
       paste(values, collapse = " | ")
     }
     data.frame(sample_id = sub("^\\^SAMPLE = ", "", block[1]), title = field("title"),
-               organism = field("organism_ch1"), source = field("source_name_ch1"),
+               organism = field("organism_ch1"), source = field("source_name_ch1"), description = field("description"),
                characteristics = field("characteristics_ch1"), stringsAsFactors = FALSE)
   }))
 }
@@ -18,7 +18,8 @@ parse_geo_soft <- function(lines) {
 fetch_geo_metadata <- function(accession, out) {
   if (!grepl("^GSE[0-9]+$", accession)) stop("Expected a GSE accession.")
   if (dir.exists(out)) stop("Metadata output already exists; choose a new directory.")
-  prefix <- paste0(sub("[0-9]{3}$", "", accession), "nnn")
+  digits <- substring(accession, 4)
+  prefix <- paste0("GSE", if (nchar(digits) > 3) substr(digits, 1, nchar(digits) - 3) else "", "nnn")
   url <- sprintf("https://ftp.ncbi.nlm.nih.gov/geo/series/%s/%s/soft/%s_family.soft.gz", prefix, accession, accession)
   tmp <- tempfile(fileext = ".soft.gz")
   on.exit(unlink(tmp), add = TRUE)

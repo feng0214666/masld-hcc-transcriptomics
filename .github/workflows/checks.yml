@@ -15,6 +15,8 @@ jobs:
           r-version: release
       - name: Validate inputs, paired design, scoring and metadata parser
         run: Rscript --vanilla tests/run_tests.R
+      - name: Validate associations, import mapping and failure cases
+        run: Rscript --vanilla tests/test_extended.R
       - name: Run complete offline demo
         run: Rscript --vanilla analysis/run.R --demo --out results/ci-demo
       - name: Rebuild and verify the committed example
@@ -26,3 +28,18 @@ jobs:
         with:
           name: synthetic-demo-report
           path: results/ci-demo/
+  deseq2-integration:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install distro-provided R and DESeq2
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends r-base-core r-bioc-deseq2
+      - name: Require DESeq2 and test fitted contrasts
+        run: Rscript --vanilla tests/test_deseq2.R
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: deseq2-integration
+          path: results/deseq2-ci/

@@ -1,6 +1,6 @@
 # Small, dependency-free building blocks; run scripts from the repository root.
 read_counts <- function(path) {
-  d <- read.delim(path, check.names = FALSE, stringsAsFactors = FALSE)
+  d <- read.delim(path, check.names = FALSE, stringsAsFactors = FALSE, colClasses = c(gene_id = "character"))
   if (ncol(d) < 3L || names(d)[1] != "gene_id")
     stop("Counts TSV must start with gene_id and contain at least two samples.")
   ids <- d[[1]]
@@ -76,19 +76,41 @@ score_sets <- function(logcpm, sets, min_genes = 3L, min_coverage = 0.5) {
   list(coverage = coverage, scores = scores)
 }
 
-make_design <- function(metadata, reference, case, paired = FALSE) {
+read_metadata <- function(path) {
+  m <- read.delim(path, check.names = FALSE, colClasses = "character")
+  if (anyDuplicated(names(m))) stop("Duplicate metadata columns.")
+  for (nm in setdiff(names(m), c("sample_id", "group", "patient_id")))
+    m[[nm]] <- type.convert(m[[nm]], as.is = TRUE)
+  m
+}
+
+validate_covariates <- function(metadata, covariates, reserved = c("sample_id", "group", "patient_id")) {
+  if (anyDuplicated(covariates) || any(!grepl("^[A-Za-z][A-Za-z0-9_]*$", covariates)) ||
+      any(covariates %in% reserved)) stop("Invalid, duplicate or reserved covariate name.")
+  if (!all(covariates %in% names(metadata))) stop("Missing covariate columns: ", paste(setdiff(covariates, names(metadata)), collapse = ", "))
+  for (nm in covariates) {
+    v <- metadata[[nm]]
+    if (anyNA(v) || any(!nzchar(as.character(v))) || (is.numeric(v) && any(!is.finite(v))))
+      stop("Missing/nonfinite covariate: ", nm, "; explicitly curate samples before fitting.")
+    if (length(unique(v)) < 2L) stop("Constant covariate: ", nm)
+  }
+  invisible(TRUE)
+}
+
+make_design <- function(metadata, reference, case, paired = FALSE, covariates = character()) {
   if (identical(reference, case)) stop("Reference and case must differ.")
   m <- metadata[metadata$group %in% c(reference, case), , drop = FALSE]
   if (any(table(factor(m$group, levels = c(reference, case))) < 3))
     stop("At least three samples in each contrast group are required.")
   m$group <- factor(m$group, levels = c(reference, case))
-  design <- ~ group
+  validate_covariates(m, covariates)
+  design <- reformulate(c(covariates, "group"))
   if (paired) {
     if (!"patient_id" %in% names(m) || anyNA(m$patient_id) || any(!nzchar(m$patient_id)))
       stop("Paired analysis requires complete patient_id.")
     m$patient_id <- factor(m$patient_id)
     if (any(table(m$patient_id, m$group) != 1L)) stop("Every patient needs exactly one sample per group.")
-    design <- ~ patient_id + group
+    design <- reformulate(c("patient_id", covariates, "group"))
   }
   mm <- model.matrix(design, m)
   if (qr(mm)$rank != ncol(mm) || nrow(mm) <= ncol(mm)) stop("Design is rank deficient or has no residual degrees of freedom.")
@@ -96,8 +118,9 @@ make_design <- function(metadata, reference, case, paired = FALSE) {
   list(metadata = m, formula = design)
 }
 
-run_deseq2 <- function(counts, metadata, reference, case, paired = FALSE) {
-  design <- make_design(metadata, reference, case, paired)
+run_deseq2 <- function(counts, metadata, reference, case, paired = FALSE, covariates = character()) {
+  metadata <- validate_inputs(counts, metadata)
+  design <- make_design(metadata, reference, case, paired, covariates)
   if (!requireNamespace("DESeq2", quietly = TRUE))
     stop("Install DESeq2 with BiocManager::install('DESeq2') before using --deseq2.")
   x <- counts[, design$metadata$sample_id, drop = FALSE]
@@ -153,8 +176,15 @@ write_report <- function(out, qc, metadata, synthetic, has_de, has_sets) {
     '<li><a href="gene_filter.tsv">Gene filter decisions</a> / <a href="sample_correlations.tsv">Sample correlations</a></li>',
     if (has_sets) '<li><a href="program_scores.tsv">Within-cohort mean gene z-scores</a> / <a href="program_coverage.tsv">Gene-set coverage</a></li>',
     if (has_de) '<li><a href="differential_expression.tsv">DESeq2 results (case / reference)</a></li>',
+    if (has_de) '<li><a href="model_matrix.tsv">Fitted design matrix</a> / <a href="model_samples.tsv">Contrast samples</a> / <a href="model_formula.txt">Model formula</a></li>',
+    if (file.exists(file.path(out, "trait_associations.tsv"))) '<li><a href="trait_associations.tsv">Trait associations and BH-adjusted p-values</a> / <a href="trait_sample_inclusion.tsv">Trait missingness decisions</a></li>',
     '<li><a href="run_info.tsv">Parameters</a> / <a href="input_checksums.tsv">Input MD5</a> / <a href="code_checksums.tsv">Code MD5</a> / <a href="sessionInfo.txt">R session</a></li>',
-    '</ul></section><footer>MASLD–HCC Transcriptomics · Cohorts are analysed independently. Program scores are descriptive, not GSVA/ssGSEA or proof of YAP protein activity.</footer></html>')
+    '</ul></section>',
+    if (has_sets) c('<section><h2>Program coverage</h2>', html_table(read.delim(file.path(out, "program_coverage.tsv"))), '</section>'),
+    if (has_de) c('<section><h2>Differential expression · first 30 rows</h2>', html_table(head(read.delim(file.path(out, "differential_expression.tsv")), 30)), '</section>'),
+    if (file.exists(file.path(out, "trait_associations.tsv"))) c('<section><h2>Trait associations</h2>', html_table(read.delim(file.path(out, "trait_associations.tsv"))),
+      '<p>Spearman estimates are rank correlations. Adjusted OLS estimates are score changes per trait unit; confidence intervals apply only to OLS. BH correction covers the programs tested for this trait in this run.</p></section>'),
+    '<footer>MASLD–HCC Transcriptomics · Cohorts are analysed independently. Program scores are descriptive, not GSVA/ssGSEA or proof of YAP protein activity.</footer></html>')
   writeLines(body, file.path(out, "report.html"), useBytes = TRUE)
 }
 
