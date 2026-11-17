@@ -1,12 +1,13 @@
 # Small, dependency-free building blocks; run scripts from the repository root.
 read_counts <- function(path) {
-  d <- read.delim(path, check.names = FALSE, stringsAsFactors = FALSE, colClasses = c(gene_id = "character"))
+  d <- read.delim(path, check.names = FALSE, stringsAsFactors = FALSE, colClasses = "character")
   if (ncol(d) < 3L || names(d)[1] != "gene_id")
     stop("Counts TSV must start with gene_id and contain at least two samples.")
   ids <- d[[1]]
   if (anyNA(ids) || any(!nzchar(ids)) || anyDuplicated(ids))
     stop("gene_id must be nonempty and unique; resolve annotation explicitly.")
   if (anyDuplicated(names(d)) || any(!nzchar(names(d)))) stop("Duplicate/empty count columns.")
+  for (nm in names(d)[-1]) d[[nm]] <- type.convert(d[[nm]], as.is = TRUE)
   if (!all(vapply(d[-1], is.numeric, logical(1)))) stop("Counts must be numeric.")
   x <- as.matrix(d[-1]); rownames(x) <- ids
   x
@@ -148,7 +149,7 @@ html_table <- function(d) {
          "</tbody></table>")
 }
 
-write_report <- function(out, qc, metadata, synthetic, has_de, has_sets) {
+write_report <- function(out, qc, metadata, synthetic, has_de, has_sets, dataset = NULL) {
   label <- if (synthetic) "SYNTHETIC DEMO / 模拟数据" else "USER-SUPPLIED COUNTS / 用户提供计数"
   body <- c('<!doctype html><html lang="en"><meta charset="utf-8">',
     '<meta name="viewport" content="width=device-width,initial-scale=1">',
@@ -161,6 +162,7 @@ write_report <- function(out, qc, metadata, synthetic, has_de, has_sets) {
     'a{color:#087e83}code{background:#edf4f5;padding:3px}footer{color:#546b73}</style>',
     '<header><small>MASLD–HCC TRANSCRIPTOMICS</small><h1>Cohort analysis report</h1>',
     paste0('<span class="tag">', label, '</span>'),
+    if (!is.null(dataset)) paste0('<p>Dataset: ', html_escape(dataset), '</p>'),
     '<p>Input validation → library QC → exploratory PCA → optional program scores / DESeq2</p></header>',
     '<section><h2>Run overview</h2>',
     paste0('<p>', nrow(metadata), ' samples · ', length(qc$keep), ' input genes · ', sum(qc$keep), ' retained genes.</p>'),
@@ -168,7 +170,8 @@ write_report <- function(out, qc, metadata, synthetic, has_de, has_sets) {
       '<p>Input provenance and suitability must be reviewed before biological interpretation. QC does not automatically exclude samples.</p>',
     '<p>Filter: count ≥10 in ≥3 samples. PCA uses centered log2(CPM+1), with library sizes computed before filtering.</p></section>',
     '<section><h2>Sample composition</h2>', html_table(as.data.frame(table(metadata$group))), '</section>',
-    '<section><h2>Library quality</h2>', html_table(qc$samples), '</section>',
+    '<section id="sample-qc"><h2>Library quality</h2><label>Find a sample <input data-filter="sample-qc" placeholder="Sample ID or value" style="padding:8px;margin:8px"></label>', html_table(qc$samples), '</section>',
+    '<section><h2>Exploratory PCA</h2>', pca_widget(qc, metadata), '</section>',
     '<section><h2>PCA variance</h2>', html_table(head(qc$variance, 6)),
     '<p>Coordinates: <a href="pca_coordinates.tsv">pca_coordinates.tsv</a>. PCA is descriptive and is not a group significance test.</p></section>',
     '<section><h2>Downloads</h2><ul>',
@@ -177,6 +180,7 @@ write_report <- function(out, qc, metadata, synthetic, has_de, has_sets) {
     if (has_sets) '<li><a href="program_scores.tsv">Within-cohort mean gene z-scores</a> / <a href="program_coverage.tsv">Gene-set coverage</a></li>',
     if (has_de) '<li><a href="differential_expression.tsv">DESeq2 results (case / reference)</a></li>',
     if (has_de) '<li><a href="model_matrix.tsv">Fitted design matrix</a> / <a href="model_samples.tsv">Contrast samples</a> / <a href="model_formula.txt">Model formula</a></li>',
+    if (has_de) '<li><a href="de_summary.tsv">DE summary (FDR&lt;0.05, |LFC|≥1)</a> / <a href="de_gene_filter.tsv">Contrast-specific gene filter</a></li>',
     if (file.exists(file.path(out, "trait_associations.tsv"))) '<li><a href="trait_associations.tsv">Trait associations and BH-adjusted p-values</a> / <a href="trait_sample_inclusion.tsv">Trait missingness decisions</a></li>',
     '<li><a href="run_info.tsv">Parameters</a> / <a href="input_checksums.tsv">Input MD5</a> / <a href="code_checksums.tsv">Code MD5</a> / <a href="sessionInfo.txt">R session</a></li>',
     '</ul></section>',
@@ -184,7 +188,8 @@ write_report <- function(out, qc, metadata, synthetic, has_de, has_sets) {
     if (has_de) c('<section><h2>Differential expression · first 30 rows</h2>', html_table(head(read.delim(file.path(out, "differential_expression.tsv")), 30)), '</section>'),
     if (file.exists(file.path(out, "trait_associations.tsv"))) c('<section><h2>Trait associations</h2>', html_table(read.delim(file.path(out, "trait_associations.tsv"))),
       '<p>Spearman estimates are rank correlations. Adjusted OLS estimates are score changes per trait unit; confidence intervals apply only to OLS. BH correction covers the programs tested for this trait in this run.</p></section>'),
-    '<footer>MASLD–HCC Transcriptomics · Cohorts are analysed independently. Program scores are descriptive, not GSVA/ssGSEA or proof of YAP protein activity.</footer></html>')
+    '<footer>MASLD–HCC Transcriptomics · Cohorts are analysed independently. Program scores are descriptive, not GSVA/ssGSEA or proof of YAP protein activity.</footer>',
+    '<script>document.querySelectorAll("[data-filter]").forEach(input=>input.addEventListener("input",()=>{const q=input.value.toLowerCase();document.getElementById(input.dataset.filter).querySelectorAll("tbody tr").forEach(row=>{row.hidden=!row.textContent.toLowerCase().includes(q)});}));</script></html>')
   writeLines(body, file.path(out, "report.html"), useBytes = TRUE)
 }
 

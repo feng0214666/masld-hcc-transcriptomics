@@ -38,8 +38,22 @@ jobs:
           sudo apt-get install -y --no-install-recommends r-base-core r-bioc-deseq2
       - name: Require DESeq2 and test fitted contrasts
         run: Rscript --vanilla tests/test_deseq2.R
+      - name: Download public discovery cohort from NCBI
+        run: |
+          mkdir -p data/raw
+          curl --fail --location --retry 3 --max-time 180 -o data/raw/GSE126848_Gene_counts_raw.txt.gz https://ftp.ncbi.nlm.nih.gov/geo/series/GSE126nnn/GSE126848/suppl/GSE126848_Gene_counts_raw.txt.gz
+          curl --fail --location --retry 3 --max-time 180 -o data/raw/GSE126848_family.soft.gz https://ftp.ncbi.nlm.nih.gov/geo/series/GSE126nnn/GSE126848/soft/GSE126848_family.soft.gz
+      - name: Import and analyse actual GSE126848 counts
+        run: |
+          Rscript --vanilla analysis/import_gse126848.R data/raw/GSE126848_Gene_counts_raw.txt.gz data/raw/GSE126848_family.soft.gz data/processed/GSE126848
+          Rscript --vanilla analysis/run.R --dataset GSE126848 --counts data/processed/GSE126848/counts.tsv --metadata data/processed/GSE126848/samples.tsv --deseq2 --reference Normal-weight --case NASH --covariates sex --out results/GSE126848-de
+          cat results/GSE126848-de/de_summary.tsv
+          cp data/processed/GSE126848/sample_mapping.tsv results/GSE126848-de/
+          cp data/processed/GSE126848/source_checksums.tsv results/GSE126848-de/
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: deseq2-integration
-          path: results/deseq2-ci/
+          path: |
+            results/deseq2-ci/
+            results/GSE126848-de/

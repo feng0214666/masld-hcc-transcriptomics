@@ -2,9 +2,10 @@
 # Usage: Rscript --vanilla analysis/run.R --demo --out results/demo
 source("R/workflow.R")
 source("R/associations.R")
+source("R/report_widgets.R")
 args <- commandArgs(trailingOnly = TRUE)
 flags <- c("--demo", "--deseq2", "--paired")
-options <- c("--out", "--counts", "--metadata", "--gmt", "--reference", "--case", "--covariates", "--trait")
+options <- c("--out", "--counts", "--metadata", "--gmt", "--reference", "--case", "--covariates", "--trait", "--dataset")
 opt <- list(); i <- 1L
 while (i <= length(args)) {
   key <- args[i]
@@ -71,18 +72,24 @@ if (!is.null(de)) {
   mm <- model.matrix(design$formula, design$metadata)
   write_tsv(data.frame(sample_id = rownames(mm), mm, check.names = FALSE), file.path(out, "model_matrix.tsv"))
   writeLines(deparse(design$formula), file.path(out, "model_formula.txt"))
+  selected <- counts[, design$metadata$sample_id, drop = FALSE]
+  write_tsv(data.frame(gene_id = rownames(selected), retained = rowSums(selected >= 10) >= 3), file.path(out, "de_gene_filter.tsv"))
+  significant <- !is.na(de$padj) & de$padj < 0.05 & abs(de$log2FoldChange) >= 1
+  write_tsv(data.frame(reference = opt[["--reference"]], case = opt[["--case"]], genes_fitted = nrow(de),
+                       genes_with_padj = sum(!is.na(de$padj)), up_FDR05_LFC1 = sum(significant & de$log2FoldChange > 0),
+                       down_FDR05_LFC1 = sum(significant & de$log2FoldChange < 0)), file.path(out, "de_summary.tsv"))
 }
 if (!is.null(association)) {
   write_tsv(association$results, file.path(out, "trait_associations.tsv"))
   write_tsv(association$exclusions, file.path(out, "trait_sample_inclusion.tsv"))
 }
 write_tsv(data.frame(input = inputs, md5 = unname(tools::md5sum(inputs))), file.path(out, "input_checksums.tsv"))
-code <- c("analysis/run.R", "R/workflow.R", "R/associations.R")
+code <- c("analysis/run.R", "R/workflow.R", "R/associations.R", "R/report_widgets.R")
 write_tsv(data.frame(file = code, md5 = unname(tools::md5sum(code))), file.path(out, "code_checksums.tsv"))
-write_tsv(data.frame(parameter = c("mode", "command", "filter", "score_method", "R"),
-                    value = c(if (demo) "synthetic" else "user_counts", paste(args, collapse = " "),
+write_tsv(data.frame(parameter = c("mode", "dataset", "command", "filter", "score_method", "R"),
+                    value = c(if (demo) "synthetic" else "user_counts", if (is.null(opt[["--dataset"]])) "unspecified" else opt[["--dataset"]], paste(args, collapse = " "),
                               "count>=10 in >=3 samples", "within-cohort mean gene z-score; >=3 genes, >=50% coverage", R.version.string)),
           file.path(out, "run_info.tsv"))
 writeLines(sub("[[:blank:]]+$", "", capture.output(sessionInfo())), file.path(out, "sessionInfo.txt"))
-write_report(out, qc, metadata, demo, !is.null(de), !is.null(programs))
+write_report(out, qc, metadata, demo, !is.null(de), !is.null(programs), opt[["--dataset"]])
 message("Complete: ", file.path(out, "report.html"))
