@@ -47,3 +47,16 @@ Audit the sample metadata and downloadable expression files for GSE126848, GSE22
 - Kept the original renv lockfile; it only locks renv, not the optional DESeq2 stack.
 
 Next: audit actual expression columns, annotation and covariates, select documented gene sets, and complete cohort-specific analyses.
+
+## 2026-11-17 — Real discovery cohort and adjusted analyses
+
+- Downloaded official GSE126848 count and SOFT files successfully. Imported 19,786 genes and 57 samples using an explicit expression-column / SOFT-description / GSM mapping with leading-zero collision checks.
+- Preserved original groups: Normal-weight 14, Obese 12, NAFL 15 and NASH 16; imported public sex labels. No gene ID conversion was performed.
+- Completed full-cohort QC: 14,190 genes retained, PC1/PC2 variance fractions approximately 24.12% / 18.59%.
+- Added explicit covariate adjustment, full-rank validation, fitted model exports, contrast-specific gene filters and DE summaries.
+- Completed actual DESeq2 NASH / Normal-weight analysis adjusted for sex in CI (R 4.3.3, DESeq2 1.42.0). Fitted 13,979 genes; 981 up and 569 down at FDR<0.05 and absolute log2FC>=1. The snapshot records source commit 2af3857fbd3ea75cd62ea97e15bad4ee46e13ee3 and run 44106406192.
+- Added independent-subject Spearman / adjusted OLS program-trait analysis, missing-trait records and BH correction. This module is tested with controlled data; GSE225740 trait analysis remains pending.
+- Base and extended checks total 61; CLI/report integration passed. Remote DESeq2 tests require the package and successfully fit paired, reverse-contrast and adjusted models.
+- Added a hoverable PCA report, sample search, real QC and DE outputs, and a browser-checked README preview.
+
+Next: curate source-verified gene programs, complete GSE225740 histology analysis, audit GSE164441 expression units, then assess cross-cohort reproducibility.

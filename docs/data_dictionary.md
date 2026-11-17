@@ -28,7 +28,7 @@ S05	tumor	P2
 S06	tumor	P3
 ```
 
-`sample_id` 和 `group` 必填，配对时 `patient_id` 必填。允许元数据顺序不同，程序按 ID 重排；缺少样本或多出样本会报错。额外协变量列原样保留，**不会自动纳入模型**。患者 ID 以去标识化公开编号或本地替代编号表示。
+`sample_id` 和 `group` 必填，配对时 `patient_id` 必填。ID 按字符读取并保留前导零。允许元数据顺序不同，程序按 ID 重排；缺少样本或多出样本会报错。协变量通过 `--covariates age,sex,batch` 明确指定。数值列作为连续变量，字符列作为分类变量；用数值编码的分类协变量应先转换为明确的文字类别。协变量缺失不自动删除样本。患者 ID 以去标识化公开编号或本地替代编号表示。
 
 GSE164441_pairs.tsv 的 sample_id 为 GSM accession，source_title 为 GEO 标题。该文件提供公开记录中的配对关系，不保证补充表达文件使用相同列名。应显式保存 `expression_column → GSM → patient_id` 映射，检查无遗漏、无重复后导入。邻近组织不等于健康肝脏。
 
@@ -50,7 +50,16 @@ GSE164441_pairs.tsv 的 sample_id 为 GSM accession，source_title 为 GEO 标�
 | sample_correlations.tsv | 过滤后 log-CPM 的 Pearson 样本相关 |
 | program_scores.tsv / program_coverage.tsv | 可选描述性程序评分及覆盖率 |
 | differential_expression.tsv | 可选 DESeq2 结果；case/reference 方向见运行参数 |
+| model_matrix.tsv / model_samples.tsv / model_formula.txt | DE 实际设计矩阵、对比样本及公式 |
+| de_gene_filter.tsv / de_summary.tsv | 仅指定对比的基因过滤决策与显式阈值摘要 |
+| trait_associations.tsv / trait_sample_inclusion.tsv | 可选数值表型关联；方法、样本数、状态、效应、CI、原始和校正 p 值及缺失值记录 |
 | input_checksums.tsv / code_checksums.tsv | 输入文件及运行脚本的 MD5，用于复核版本 |
 | run_info.tsv / sessionInfo.txt | 命令参数、方法标签和实际软件会话 |
 
 输出目录若已存在则拒绝运行，防止混入上一次分析产物。失败时保留的目录应检查原因后使用新目录重试。MD5 用作内容一致性标识，不作为安全签名。
+
+## 数值表型关联
+
+`--trait NAS` 指向一个数值列。未指定协变量时计算 Spearman rho；指定协变量时拟合 `score ~ trait + covariates`，estimate 为每单位表型对应的分数变化，CI 是 OLS 的 95% 区间。缺失或非有限的表型值被记录后排除，协变量缺失会阻止运行。
+
+至少需要 5 个有效独立样本；常量、样本不足和不可估计设计记录为相应 status，并保留 NA。重复患者会报错。BH 仅校正该次单个表型运行中有可用检验的程序。多个表型、多次运行或探索性选择的整体多重比较策略需另行定义。

@@ -16,7 +16,9 @@ jobs:
       - name: Validate inputs, paired design, scoring and metadata parser
         run: Rscript --vanilla tests/run_tests.R
       - name: Validate associations, import mapping and failure cases
-        run: Rscript --vanilla tests/test_extended.R
+        run: |
+          Rscript --vanilla tests/test_extended.R
+          Rscript --vanilla tests/test_association_cli.R
       - name: Run complete offline demo
         run: Rscript --vanilla analysis/run.R --demo --out results/ci-demo
       - name: Rebuild and verify the committed example

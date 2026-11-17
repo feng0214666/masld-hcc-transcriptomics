@@ -8,7 +8,19 @@ Cross-cohort investigation of lipid-metabolic and Hippo–YAP transcriptional pr
 [![R](https://img.shields.io/badge/R-%E2%89%A54.3-276DC3?logo=r)](https://www.r-project.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-17876f.svg)](LICENSE)
 
-本项目研究脂质代谢与 YAP/TEAD 相关转录程序在独立人肝脏队列中的变化。目前已提供可运行的 R 工作流、公开队列资料审查和配对样本清单；真实表达矩阵的导入、协变量审查和生物学结果分析是接下来的研究工作。
+本项目研究脂质代谢与 YAP/TEAD 相关转录程序在独立人肝脏队列中的变化。已完成 GSE126848 真实计数接入、57 个样本的 QC，以及调整性别的 NASH 对正常体重组差异分析；同时提供 GEO 导入、配对建模、协变量调整、程序评分、组织学关联和离线报告工具。
+
+## 已完成的真实分析
+
+| 数据与分析 | 已保存结果 |
+|---|---|
+| GSE126848：19,786 个基因、57 个样本 | [真实 QC 报告](examples/GSE126848-qc/report.html)、PCA 坐标与样本映射 |
+| NASH 16 例 vs 正常体重组 14 例，设计 `~ sex + group` | [完整 DESeq2 结果](examples/GSE126848-de/differential_expression.tsv)、[模型矩阵](examples/GSE126848-de/model_matrix.tsv) |
+| FDR＜0.05 且绝对 log2FC≥1 | 上调 981、下调 569；[结果摘要](examples/GSE126848-de/de_summary.tsv) |
+
+这些数值来自指定队列和模型。[复现步骤与结果说明](docs/real_cohort_walkthrough.md)记录了输入来源、样本规模、软件版本与代码提交。程序签名的生物学验证及其他队列的独立复现仍是下一阶段工作。
+
+![真实队列报告预览](docs/assets/report-preview.png)
 
 ## 立即运行
 
@@ -29,9 +41,10 @@ Rscript --vanilla analysis/run.R --demo --out results/my-demo
 |---|---|
 | GEO 元数据获取 | 下载 family SOFT，导出 GSM、标题、组织、物种及原始特征；保存来源、时间与 MD5 |
 | 输入质量检查 | 检查计数类型、缺失值、重复基因与样本、样本对应关系及空文库 |
-| 探索性 QC | 文库大小、检出基因数、表达过滤、PCA 坐标和解释方差、样本相关矩阵 |
+| 探索性 QC | 文库大小、检出基因数、表达过滤、可悬停查询的 PCA 散点图、解释方差、样本相关矩阵 |
 | 基因程序评分 | 读取自备 GMT，计算队列内平均基因 z 分数，并输出覆盖率与跳过原因对应指标 |
-| 差异表达 | 可选 DESeq2；显式指定 case/reference，支持 `~ patient_id + group` 配对设计 |
+| 差异表达 | DESeq2；显式指定 case/reference，支持配对、年龄／性别／批次等协变量及秩检查 |
+| 组织学关联 | GMT 程序分数与数值表型的 Spearman 相关或协变量调整 OLS；记录缺失值与 BH 校正 |
 | 可追溯结果 | 独立 HTML 报告、TSV 表格、输入校验和、参数和 `sessionInfo()` |
 | 持续检查 | GitHub Actions 运行测试与离线示例，上传报告作为运行产物 |
 
@@ -85,20 +98,31 @@ BiocManager::install("DESeq2")
 Rscript --vanilla analysis/run.R --counts data/processed/counts.tsv --metadata data/metadata/samples.tsv --deseq2 --reference adjacent --case tumor --paired --out results/hcc-de
 ```
 
-`log2FoldChange > 0` 表示 case 相对 reference 升高。配对分析要求每个受试者两组各一个样本，至少三个完整配对。其他组可保留在 QC 中，差异分析仅使用指定两组。该入口当前支持组别与可选配对项；真实研究需要调整年龄、性别、批次等协变量时，应扩展并审查设计矩阵后再作推断。
+`log2FoldChange > 0` 表示 case 相对 reference 升高。配对分析要求每个受试者两组各一个样本，至少三个完整配对。其他组保留在 QC 中，差异分析仅使用指定两组。通过 `--covariates age,sex,batch` 显式加入协变量；缺失、常量、完全混杂和配对项共线会报错。模型公式、纳入样本、设计矩阵和对比专用过滤表随结果保存。
+
+程序分数与组织学指标的关联示例：
+
+```sh
+Rscript --vanilla analysis/run.R --counts counts.tsv --metadata samples.tsv --gmt programs.gmt --trait NAS --covariates age,sex --out results/nas-association
+```
+
+不提供 `--covariates` 时计算 Spearman 相关；提供时拟合 OLS 并输出每单位表型对应的分数变化、95% CI 和 BH 校正 p 值。同一患者重复采样会被拒绝，需另行采用适当的重复测量模型。
 
 ## 方法与复现
 
 - QC 使用 count ≥10 且至少 3 个样本满足的过滤规则，基于全部输入基因的文库大小计算 log2(CPM+1)，再进行中心化 PCA。
 - 程序评分为队列内各基因标准化后的均值；至少匹配 3 个非恒定基因且覆盖率 ≥50%。这是描述性评分，不等同于 GSVA、ssGSEA 或富集显著性检验。
 - DESeq2 使用选定对比的整数计数和相同过滤阈值，输出 Wald 检验及 BH 调整结果；独立过滤等因素产生的 NA 保留。未进行 LFC 收缩。
-- 每个队列独立分析。跨队列程序评分不能直接当作统一标尺比较；综合效应和异质性分析尚待实现。
+- 每个队列独立分析。程序关联的 BH 校正范围是该次运行、该表型成功检验的程序集合；多个表型的整体检验家族需另行预设。跨队列程序评分不能直接当作统一标尺比较；综合效应和异质性分析尚待实现。
 - 基础工作流使用 `--vanilla` 避免首次启动自动下载 renv。原有 `renv.lock` 仅记录 renv，**尚未锁定可选 DESeq2 环境**。安装并验证完整分析依赖后，使用 `renv::snapshot()` 更新锁文件；每次运行同时保存实际 R 会话版本。
 
 ## 文件导航
 
 ```text
 R/workflow.R                 输入检查、QC、评分、DESeq2 与报告函数
+R/associations.R             数值表型关联、协变量调整与检验状态
+R/import_geo.R               GSE126848 公开计数的显式编号映射
+R/report_widgets.R           离线 PCA 交互视图
 R/geo.R                      GEO SOFT 下载及解析
 analysis/run.R               分析命令行入口
 analysis/fetch_geo.R         GEO 元数据命令行入口
@@ -106,6 +130,8 @@ config/cohorts.tsv           已核对的候选队列概览
 data/metadata/GSE164441_pairs.tsv  公开的 10 对样本对应表
 docs/                        输入说明、方法和队列审查
 examples/demo/               已运行的模拟示例与输出
+examples/GSE126848-qc/       真实队列 QC 与来源映射
+examples/GSE126848-de/       已完成的真实 DESeq2 分析快照
 tests/run_tests.R            输入边界、设计、评分和解析检查
 .github/workflows/checks.yml CI 与示例报告产物
 ```

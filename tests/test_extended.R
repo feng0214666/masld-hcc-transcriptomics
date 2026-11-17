@@ -1,4 +1,5 @@
 source("R/workflow.R"); source("R/geo.R"); source("R/import_geo.R"); source("R/associations.R")
+source("R/report_widgets.R")
 checks <- 0L
 check <- function(ok) { stopifnot(ok); checks <<- checks + 1L }
 fails <- function(expr) check(tryCatch({ force(expr); FALSE }, error = function(e) TRUE))
@@ -54,4 +55,10 @@ check(mapped$sample_id[1] == "GSM57" && mapped$source_description[1] == "57")
 bad <- soft; bad$description[1] <- "2"; fails(map_gse126848(sprintf("%04d", 1:57), bad))
 bad <- soft; bad$title[1] <- "unexpected"; fails(map_gse126848(sprintf("%04d", 1:57), bad))
 fails(map_gse126848(as.character(1:56), soft))
+q <- qc_counts(d$counts)
+widget <- pca_widget(q, d$metadata)
+check(length(gregexpr("<circle ", widget)[[1]]) == 12)
+bad <- d$metadata; bad$group[1] <- '<img src=x onerror=alert(1)>'
+widget <- pca_widget(q, bad)
+check(grepl("&lt;img", widget, fixed = TRUE) && !grepl("<img", widget, fixed = TRUE))
 cat(checks, "extended checks passed\n")

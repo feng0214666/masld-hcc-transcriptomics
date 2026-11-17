@@ -151,6 +151,7 @@ html_table <- function(d) {
 
 write_report <- function(out, qc, metadata, synthetic, has_de, has_sets, dataset = NULL) {
   label <- if (synthetic) "SYNTHETIC DEMO / 模拟数据" else "USER-SUPPLIED COUNTS / 用户提供计数"
+  composition <- as.data.frame(table(metadata$group)); names(composition) <- c("group", "samples")
   body <- c('<!doctype html><html lang="en"><meta charset="utf-8">',
     '<meta name="viewport" content="width=device-width,initial-scale=1">',
     '<title>MASLD–HCC | Analysis report</title><style>',
@@ -169,9 +170,9 @@ write_report <- function(out, qc, metadata, synthetic, has_de, has_sets, dataset
     if (synthetic) '<p>All expression values and gene programs in this run are simulated. They establish software behavior and contain no evidence about MASLD or HCC.</p>' else
       '<p>Input provenance and suitability must be reviewed before biological interpretation. QC does not automatically exclude samples.</p>',
     '<p>Filter: count ≥10 in ≥3 samples. PCA uses centered log2(CPM+1), with library sizes computed before filtering.</p></section>',
-    '<section><h2>Sample composition</h2>', html_table(as.data.frame(table(metadata$group))), '</section>',
-    '<section id="sample-qc"><h2>Library quality</h2><label>Find a sample <input data-filter="sample-qc" placeholder="Sample ID or value" style="padding:8px;margin:8px"></label>', html_table(qc$samples), '</section>',
+    '<section><h2>Sample composition</h2>', html_table(composition), '</section>',
     '<section><h2>Exploratory PCA</h2>', pca_widget(qc, metadata), '</section>',
+    '<section id="sample-qc"><h2>Library quality</h2><details><summary>Expand sample statistics and search</summary><label>Find a sample <input data-filter="sample-qc" placeholder="Sample ID or value" style="padding:8px;margin:8px"></label>', html_table(qc$samples), '</details></section>',
     '<section><h2>PCA variance</h2>', html_table(head(qc$variance, 6)),
     '<p>Coordinates: <a href="pca_coordinates.tsv">pca_coordinates.tsv</a>. PCA is descriptive and is not a group significance test.</p></section>',
     '<section><h2>Downloads</h2><ul>',

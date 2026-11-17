@@ -2,7 +2,7 @@ datasets:
   GSE126848:
     role: discovery
     disease_context: MASLD severity
-    status: series_record_reviewed_expression_audit_pending
+    status: counts_imported_qc_and_sex_adjusted_nash_contrast_completed
     url: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE126848
 
   GSE225740:

@@ -1,0 +1,7 @@
+parameter	value
+mode	user_counts
+dataset	GSE126848
+command	--dataset GSE126848 --counts data/processed/GSE126848/counts.tsv --metadata data/processed/GSE126848/samples.tsv --out examples/GSE126848-qc
+filter	count>=10 in >=3 samples
+score_method	within-cohort mean gene z-score; >=3 genes, >=50% coverage
+R	R version 4.6.1 (2026-06-24 ucrt)
