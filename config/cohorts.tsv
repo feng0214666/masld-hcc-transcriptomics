@@ -1,0 +1,4 @@
+accession	role	record_samples	input_notes	geo_url
+GSE126848	discovery	57	Gene_counts_raw.txt.gz; audit gene IDs and sample mapping	https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE126848
+GSE225740	histology_validation	93	RNA_counts.csv.gz and phenotypes.csv.gz; retain missing histology	https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE225740
+GSE164441	paired_hcc	20	Cuffdiff count and FPKM summaries; raw reads unavailable; do not assume raw integer counts	https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE164441

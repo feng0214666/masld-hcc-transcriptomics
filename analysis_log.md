@@ -34,3 +34,16 @@ Do lipid-metabolic and Hippo–YAP transcriptional programs change consistently 
 ### Next step
 
 Audit the sample metadata and downloadable expression files for GSE126848, GSE225740, and GSE164441.
+
+## 2026-11-17 — Runnable workflow and cohort audit
+
+- Implemented a base-R command-line workflow for strict count/metadata validation, QC, PCA tables, user-GMT program scores and an offline HTML report.
+- Added an optional DESeq2 contrast with explicit direction and complete-pair validation. DESeq2 is not installed in the local validation environment; its integration checks are skipped there.
+- Added a GEO family SOFT metadata downloader and parser, input/code checksums and session provenance.
+- Checked GEO Series records and curated GSE164441 public sample-title pair mappings (20 samples / 10 pairs).
+- GSE164441 Cuffdiff summaries require a format/unit audit before any count-based analysis; raw sequencing data are not publicly supplied.
+- Added offline tests, a reproducible synthetic example, CI and user documentation. Synthetic expression does not establish biological findings.
+- Local GEO download attempts failed (network initialization in sandbox; timeout after network escalation). Parser tests use a small SOFT fixture; live downloading remains unverified.
+- Kept the original renv lockfile; it only locks renv, not the optional DESeq2 stack.
+
+Next: audit actual expression columns, annotation and covariates, select documented gene sets, and complete cohort-specific analyses.

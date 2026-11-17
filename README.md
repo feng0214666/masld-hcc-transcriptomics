@@ -1,194 +1,115 @@
-# masld-hcc-transcriptomics
-跨队列分析MASLD不同严重阶段及MASLD相关肝细胞癌中的脂质代谢和Hippo–YAP转录程序。Cross-cohort transcriptomic analysis of lipid metabolism and Hippo–YAP programs across MASLD severity and MASLD-associated hepatocellular carcinoma.
 # MASLD–HCC Transcriptomics
 
-Cross-cohort transcriptomic analysis of lipid metabolism and Hippo–YAP programs across metabolic dysfunction-associated steatotic liver disease (MASLD) severity and MASLD-associated hepatocellular carcinoma (HCC).
+**从脂质代谢到 Hippo–YAP：面向人肝脏公开队列的可复现转录组分析工具。**
 
-> **Project status:** Study design and data preparation  
-> **Project type:** Reanalysis of publicly available human transcriptomic datasets  
-> **Primary language:** R
+Cross-cohort investigation of lipid-metabolic and Hippo–YAP transcriptional programs across MASLD severity and MASLD-associated hepatocellular carcinoma.
 
-## Overview
+[![R workflow checks](https://github.com/feng0214666/masld-hcc-transcriptomics/actions/workflows/checks.yml/badge.svg)](https://github.com/feng0214666/masld-hcc-transcriptomics/actions/workflows/checks.yml)
+[![R](https://img.shields.io/badge/R-%E2%89%A54.3-276DC3?logo=r)](https://www.r-project.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-17876f.svg)](LICENSE)
 
-Metabolic dysfunction-associated steatotic liver disease (MASLD) encompasses a spectrum ranging from hepatic steatosis to metabolic dysfunction-associated steatohepatitis (MASH), fibrosis, and hepatocellular carcinoma (HCC).
+本项目研究脂质代谢与 YAP/TEAD 相关转录程序在独立人肝脏队列中的变化。目前已提供可运行的 R 工作流、公开队列资料审查和配对样本清单；真实表达矩阵的导入、协变量审查和生物学结果分析是接下来的研究工作。
 
-Altered lipid metabolism is a central feature of MASLD, while Hippo–YAP signaling is involved in liver injury, regeneration, fibrosis, and tumor development. However, it remains unclear whether lipid-metabolic alterations and YAP-related transcriptional activity show consistent patterns across independent datasets representing different stages of MASLD and MASLD-associated HCC.
+## 立即运行
 
-This project will reanalyse publicly available human liver transcriptomic datasets to characterize these molecular programs across disease severity and cancer status.
+在仓库根目录执行；基础示例只用 R 自带包，无需下载表达数据。
 
-## Research question
+```sh
+Rscript --vanilla tests/run_tests.R
+Rscript --vanilla analysis/run.R --demo --out results/my-demo
+```
 
-**Do lipid-metabolic and Hippo–YAP transcriptional programs change consistently across MASLD severity and MASLD-associated hepatocellular carcinoma in independent human transcriptomic cohorts?**
+用浏览器打开 `results/my-demo/report.html`，即可查看样本组成、文库统计、PCA 方差与所有结果表的下载入口。每次运行请使用新的输出目录。
 
-中文：在不同的人肝脏转录组队列中，脂质代谢与 Hippo–YAP 转录程序是否随 MASLD 严重程度及 MASLD 相关肝细胞癌呈现一致变化？
+**示例包含 12 个模拟样本、6 对配对标签和 120 个模拟基因，仅用于验证软件。** 已运行的示例位于 [examples/demo](examples/demo)，其 [报告源码](examples/demo/report.html) 可下载后在浏览器打开。
 
-## Working hypothesis
+## 现在能做什么
 
-Increasing MASLD severity and MASLD-associated HCC may be accompanied by coordinated alterations in lipid-metabolic pathways and selected YAP/TEAD-related transcriptional programs.
+| 能力 | 实际实现 |
+|---|---|
+| GEO 元数据获取 | 下载 family SOFT，导出 GSM、标题、组织、物种及原始特征；保存来源、时间与 MD5 |
+| 输入质量检查 | 检查计数类型、缺失值、重复基因与样本、样本对应关系及空文库 |
+| 探索性 QC | 文库大小、检出基因数、表达过滤、PCA 坐标和解释方差、样本相关矩阵 |
+| 基因程序评分 | 读取自备 GMT，计算队列内平均基因 z 分数，并输出覆盖率与跳过原因对应指标 |
+| 差异表达 | 可选 DESeq2；显式指定 case/reference，支持 `~ patient_id + group` 配对设计 |
+| 可追溯结果 | 独立 HTML 报告、TSV 表格、输入校验和、参数和 `sessionInfo()` |
+| 持续检查 | GitHub Actions 运行测试与离线示例，上传报告作为运行产物 |
 
-This is a working hypothesis to be tested rather than an established conclusion.
+```mermaid
+flowchart LR
+    A[GEO 元数据与来源记录] --> B[人工确认分组与表达列映射]
+    B --> C[整数计数与样本检查]
+    C --> D[队列内 QC 与 PCA]
+    D --> E[GMT 程序评分]
+    D --> F[可选 DESeq2 配对或非配对分析]
+    E --> G[HTML 报告与可追溯表格]
+    F --> G
+```
 
-## Objectives
+## 公开队列与研究设计
 
-1. Characterize transcriptomic changes across healthy liver, steatosis, and MASH.
-2. Examine associations between pathway activity and histological disease severity.
-3. Compare MASLD-associated HCC tumors with adjacent non-tumor tissues.
-4. Evaluate whether lipid-metabolic and Hippo–YAP signals are reproducible across independent cohorts.
-5. Generate a reproducible R workflow and publication-ready figures.
+核心问题：**脂质代谢和 Hippo–YAP 相关转录程序的变化，能否在不同 MASLD 严重程度及 MASLD 相关 HCC 的独立队列中重复观察到？**
 
-## Public datasets
+| 队列 | GEO 记录样本数 | 用途 | 导入前需要确认 |
+|---|---:|---|---|
+| [GSE126848](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE126848) | 57 | 正常体重、肥胖、NAFL 与 NASH 的比较 | 基因注释、表达列与 GSM 对应、原始分组 |
+| [GSE225740](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE225740) | 93 | NAS 与纤维化等组织学指标 | 保留缺失值，检查协变量与表型编码 |
+| [GSE164441](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE164441) | 20 | 10 对 NAFLD 相关 HCC 肿瘤／邻近组织 | Cuffdiff 文件结构与计数定义；原始测序数据未公开 |
 
-| Dataset | Planned use | Study design |
-|---|---|---|
-| [GSE126848](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE126848) | Discovery of expression and pathway changes across MASLD stages | Human liver RNA-seq including healthy, obese, steatosis, and MASH groups |
-| [GSE225740](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE225740) | Association with histological severity | Human liver biopsies with disease activity and fibrosis information |
-| [GSE164441](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE164441) | Evaluation in MASLD-associated HCC | Paired tumor and adjacent non-tumor liver tissues |
+样本数是 GEO 记录中的规模，并非本项目最终纳入数。旧研究保留原始 NAFLD/NASH 标签；MASLD/MASH 的现代临床分类需要相应个体资料支持。详见 [队列审查记录](docs/cohort_audit.md)。
 
-Dataset inclusion and final sample numbers may be revised after metadata review and quality control.
+## 接入自己的数据
 
-## Planned analysis
+先获取元数据，随后人工核对标签和表达列，避免按列顺序猜测样本身份：
 
-1. Download and curate public datasets and clinical metadata.
-2. Conduct sample-level quality control and exploratory analysis.
-3. Perform differential gene-expression analysis within each cohort.
-4. Quantify lipid metabolism, fibrosis, inflammation, and Hippo–YAP pathway activity.
-5. Compare tumors with matched adjacent non-tumor tissues.
-6. Evaluate the consistency of gene- and pathway-level changes across cohorts.
-7. Conduct sensitivity analyses and document all analytical decisions.
+```sh
+Rscript --vanilla analysis/fetch_geo.R GSE126848 data/metadata/GSE126848_run1
+```
 
-Count-based RNA-seq datasets will primarily be analysed using `DESeq2`. Pathway analyses may use `fgsea`, `GSVA`, `msigdbr`, and related R packages.
+准备以 `gene_id` 开头的计数 TSV，以及含 `sample_id`、`group` 的元数据 TSV；[输入规范和示例](docs/data_dictionary.md) 列出了完整要求。
 
-Each cohort will first be analysed independently. Expression matrices from different studies will not be directly pooled without a justified and validated integration strategy.
+```sh
+Rscript --vanilla analysis/run.R --counts data/processed/counts.tsv --metadata data/metadata/samples.tsv --out results/cohort-qc
+```
 
-## Pathways of interest
+可选地通过 `--gmt config/programs.gmt` 加入自行核定来源与版本的基因集。演示基因集只包含 `DEMO_GENE_*`；项目尚未提供经过文献核验的 YAP 活性签名。
 
-Predefined biological programs include:
+差异分析前先安装 Bioconductor 的 DESeq2：
 
-- Fatty-acid metabolism
-- Adipogenesis
-- Cholesterol homeostasis
-- Bile-acid metabolism
-- Oxidative phosphorylation
-- Reactive oxygen species
-- Inflammatory signaling
-- Extracellular matrix and fibrosis
-- TGF-β signaling
-- Hippo–YAP/TAZ signaling
-- YAP–TEAD target-gene activity
-- Protein palmitoylation-related genes
+```r
+install.packages("BiocManager")
+BiocManager::install("DESeq2")
+```
 
-Exploratory analyses will be clearly distinguished from these predefined analyses.
+```sh
+Rscript --vanilla analysis/run.R --counts data/processed/counts.tsv --metadata data/metadata/samples.tsv --deseq2 --reference adjacent --case tumor --paired --out results/hcc-de
+```
 
-## Expected figures
+`log2FoldChange > 0` 表示 case 相对 reference 升高。配对分析要求每个受试者两组各一个样本，至少三个完整配对。其他组可保留在 QC 中，差异分析仅使用指定两组。该入口当前支持组别与可选配对项；真实研究需要调整年龄、性别、批次等协变量时，应扩展并审查设计矩阵后再作推断。
 
-1. **Study design and cohort overview**  
-   Sample composition, clinical groups, and analytical workflow.
+## 方法与复现
 
-2. **Transcriptomic landscape of MASLD severity**  
-   PCA, differential-expression summary, and pathway changes across healthy liver, steatosis, and MASH.
+- QC 使用 count ≥10 且至少 3 个样本满足的过滤规则，基于全部输入基因的文库大小计算 log2(CPM+1)，再进行中心化 PCA。
+- 程序评分为队列内各基因标准化后的均值；至少匹配 3 个非恒定基因且覆盖率 ≥50%。这是描述性评分，不等同于 GSVA、ssGSEA 或富集显著性检验。
+- DESeq2 使用选定对比的整数计数和相同过滤阈值，输出 Wald 检验及 BH 调整结果；独立过滤等因素产生的 NA 保留。未进行 LFC 收缩。
+- 每个队列独立分析。跨队列程序评分不能直接当作统一标尺比较；综合效应和异质性分析尚待实现。
+- 基础工作流使用 `--vanilla` 避免首次启动自动下载 renv。原有 `renv.lock` 仅记录 renv，**尚未锁定可选 DESeq2 环境**。安装并验证完整分析依赖后，使用 `renv::snapshot()` 更新锁文件；每次运行同时保存实际 R 会话版本。
 
-3. **Association with histological severity**  
-   Relationships between pathway scores, disease activity, and fibrosis stage.
+## 文件导航
 
-4. **MASLD-associated HCC analysis**  
-   Paired comparison of tumor and adjacent tissues, focusing on lipid metabolism and Hippo–YAP programs.
+```text
+R/workflow.R                 输入检查、QC、评分、DESeq2 与报告函数
+R/geo.R                      GEO SOFT 下载及解析
+analysis/run.R               分析命令行入口
+analysis/fetch_geo.R         GEO 元数据命令行入口
+config/cohorts.tsv           已核对的候选队列概览
+data/metadata/GSE164441_pairs.tsv  公开的 10 对样本对应表
+docs/                        输入说明、方法和队列审查
+examples/demo/               已运行的模拟示例与输出
+tests/run_tests.R            输入边界、设计、评分和解析检查
+.github/workflows/checks.yml CI 与示例报告产物
+```
 
-5. **Cross-cohort synthesis**  
-   Consistency of gene- and pathway-level changes across independent datasets.
+[分析日志](analysis_log.md)记录研究决策；[研究方案](docs/study_protocol.md)说明后续验证顺序。代码采用 [MIT License](LICENSE)。
 
-These are planned outputs and may be modified according to data quality and metadata availability.
-
-## Project boundaries
-
-This project is based on secondary analysis of public, primarily cross-sectional transcriptomic datasets.
-
-Therefore:
-
-- The study can identify associations and reproducible transcriptional patterns.
-- It cannot demonstrate longitudinal disease progression in the same individuals.
-- It cannot establish causal relationships between lipid metabolism, YAP activity, and HCC development.
-- Transcript abundance does not directly establish protein activity, YAP nuclear localization, or protein palmitoylation.
-- Proposed mechanisms will require experimental or prospective clinical validation.
-- Predictive models will not be presented as clinically applicable without external validation.
-
-The project will use terms such as **associated with**, **consistent with**, and **suggests**, rather than making unsupported causal claims.
-
-## Repository structure
-
-<pre>
-masld-hcc-transcriptomics/
-├── README.md
-├── masld-hcc-transcriptomics.Rproj
-├── renv.lock
-├── analysis_log.md
-├── config/
-│   └── datasets.yml
-├── data/
-│   ├── raw/
-│   ├── metadata/
-│   └── processed/
-├── R/
-│   ├── download_data.R
-│   ├── curate_metadata.R
-│   ├── quality_control.R
-│   ├── differential_expression.R
-│   ├── pathway_analysis.R
-│   └── plotting.R
-├── analysis/
-│   ├── 01_data_preparation.Rmd
-│   ├── 02_quality_control.Rmd
-│   ├── 03_masld_analysis.Rmd
-│   ├── 04_hcc_analysis.Rmd
-│   └── 05_cross_cohort_analysis.Rmd
-├── results/
-│   ├── tables/
-│   └── figures/
-├── docs/
-│   ├── study_protocol.md
-│   └── data_dictionary.md
-└── references/
-</pre>
-
-Large data files and intermediate analysis objects will be excluded from version control. Data-download and preprocessing scripts will be provided whenever permitted by the original repositories.
-
-## Reproducibility
-
-The analysis will be conducted in R. Package versions will be managed using [`renv`](https://rstudio.github.io/renv/).
-
-After cloning the repository, the R environment can be restored with:
-
-<pre>
-install.packages("renv")
-renv::restore()
-</pre>
-
-Exact reproduction instructions will be added after completion of the data-processing workflow.
-
-## Planned deliverables
-
-By the end of the initial one-month project period, this repository aims to contain:
-
-- Curated dataset documentation
-- Reproducible R analysis scripts
-- A complete analysis log
-- Quality-control reports
-- Three to five principal scientific figures
-- Processed summary tables
-- A Chinese research report or manuscript outline
-- A scientific poster draft
-
-## Analysis log
-
-Important analytical decisions, failed attempts, parameter changes, and daily progress will be documented in [`analysis_log.md`](analysis_log.md).
-
-## Data and code availability
-
-All datasets used in this project are publicly available through the NCBI Gene Expression Omnibus. This repository will contain analysis code and derived summary results but will not redistribute sensitive, controlled, or unnecessarily large source data.
-
-## License
-
-The code in this repository is released under the [MIT License](LICENSE).
-
-## Disclaimer
-
-This is an exploratory academic bioinformatics project. The results are not intended for clinical diagnosis, treatment selection, or medical decision-making.
+本项目输出为研究分析结果。横断面关联不直接证明纵向进展或因果关系；转录签名也不直接测量 YAP 核定位、蛋白活性或棕榈酰化。

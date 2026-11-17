@@ -1,0 +1,26 @@
+# Validate the saved demo's file links, provenance and input round-trip.
+source("R/workflow.R")
+out <- "examples/demo"
+html <- paste(readLines(file.path(out, "report.html"), warn = FALSE), collapse = "\n")
+stopifnot(grepl("SYNTHETIC DEMO", html, fixed = TRUE))
+links <- regmatches(html, gregexpr('href="[^"]+"', html))[[1]]
+links <- sub('^href="', "", sub('"$', "", links))
+stopifnot(length(links) >= 10L, all(file.exists(file.path(out, links))))
+counts <- read_counts(file.path(out, "demo_counts.tsv"))
+metadata <- read.delim(file.path(out, "demo_metadata.tsv"))
+stopifnot(nrow(validate_inputs(counts, metadata)) == 12)
+md5 <- read.delim(file.path(out, "input_checksums.tsv"))
+stopifnot(identical(unname(tools::md5sum(md5$input)), md5$md5))
+code <- read.delim(file.path(out, "code_checksums.tsv"))
+stopifnot(identical(unname(tools::md5sum(code$file)), code$md5))
+target <- tempfile("masld-user-run-")
+rscript <- file.path(R.home("bin"), paste0("Rscript", if (.Platform$OS.type == "windows") ".exe" else ""))
+run_args <- c("--vanilla", "analysis/run.R", "--counts", file.path(out, "demo_counts.tsv"),
+              "--metadata", file.path(out, "demo_metadata.tsv"), "--out", shQuote(target))
+result <- system2(rscript, run_args, stdout = TRUE, stderr = TRUE)
+stopifnot(is.null(attr(result, "status")), file.exists(file.path(target, "report.html")))
+stopifnot(grepl("USER-SUPPLIED COUNTS", paste(readLines(file.path(target, "report.html")), collapse = ""), fixed = TRUE))
+again <- suppressWarnings(system2(rscript, run_args, stdout = TRUE, stderr = TRUE))
+stopifnot(attr(again, "status") != 0, any(grepl("already exists", again)))
+cat("Report links, synthetic label, input round-trip and input/code checksums passed\n")
+cat("External TSV CLI run and output-overwrite protection passed\n")
