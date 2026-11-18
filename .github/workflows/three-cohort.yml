@@ -10,39 +10,36 @@ on:
       - 'environment/**'
       - '.github/workflows/three-cohort.yml'
   push:
-    branches: [main, 'codex/masld-runnable-workflow']
+    branches: [main]
   workflow_dispatch:
 permissions:
   contents: read
 concurrency:
-  group: three-cohort-${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  group: three-cohort-${{ github.ref }}
   cancel-in-progress: true
 jobs:
   three-cohort:
     runs-on: ubuntu-24.04
-    timeout-minutes: 12
+    timeout-minutes: 18
     steps:
       - uses: actions/checkout@v4
-      - name: Download source files and record SHA-256
-        shell: bash
-        run: |
-          mkdir -p data/raw
-          tail -n +2 config/study_sources.tsv | while IFS=$'\t' read -r file url expected; do
-            curl -fsSL --retry 3 --retry-max-time 180 --connect-timeout 10 --max-time 120 -o "data/raw/$file" "$url"
-          done
-          (cd data/raw && sha256sum *) | tee data/raw/checksums.txt
-      - uses: actions/upload-artifact@v4
+      - name: Restore cached public inputs
+        uses: actions/cache@v4
         with:
-          name: source-checksums
-          path: data/raw/checksums.txt
-      - name: Install R and Bioconductor packages
+          path: data/raw
+          key: three-cohort-public-${{ hashFiles('config/study_sources.tsv') }}
+      - name: Verify public source files against SHA-256 manifest
+        run: bash analysis/fetch_study.sh data/raw
+      - name: Build the pinned analysis environment
+        run: docker build --platform linux/amd64 --tag masld-analysis environment
+      - name: Fit and validate the three cohorts
         run: |
-          sudo apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=15 update -qq
-          sudo apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=15 install -y --no-install-recommends r-base-core=4.3.3-2build2 r-bioc-deseq2=1.42.0+dfsg-1 r-bioc-limma=3.58.1+dfsg-1
-      - name: Fit the three cohorts
-        run: |
-          Rscript --vanilla analysis/run_study.R data/raw results/three-cohort
-          test -f results/three-cohort/_SUCCESS
+          mkdir -p results
+          docker run --rm --network none --user "$(id -u):$(id -g)" \
+            -v "$PWD:/study:ro" -v "$PWD/results:/output" -w /study masld-analysis \
+            bash -e -c 'Rscript --vanilla tests/test_deseq2.R /output/deseq2-ci
+                        Rscript --vanilla analysis/run_study.R data/raw /output/three-cohort
+                        Rscript --vanilla tests/check_study.R /output/three-cohort'
       - uses: actions/upload-artifact@v4
         if: always()
         with:

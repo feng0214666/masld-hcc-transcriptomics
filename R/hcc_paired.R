@@ -36,14 +36,20 @@ study_hcc <- function(raw, programs, out) {
   keep <- annotated & !ambiguous & quantified & expressive
   count_path <- file.path(raw, "GSE164441_RNAseq_10Tvs10NT_cuffdiff_count.txt.gz")
   count_con <- gzfile(count_path)
-  count_head <- tryCatch(readLines(count_con, n = 10), finally = close(count_con))
-  count_header <- grep("^#?test_id\t", count_head, value = TRUE)
-  if (length(count_header) != 1) stop("Could not identify the Cuffdiff count header.")
+  count_head <- tryCatch(readLines(count_con, n = 4), finally = close(count_con))
+  count_header <- strsplit(count_head[1], "\t", fixed = TRUE)[[1]]
+  expected_count <- sub("_FPKM$", "_count", m$source_column)
+  if (count_header[1] != "tracking_id" || anyDuplicated(count_header) ||
+      !setequal(count_header[-1L], expected_count)) stop("Unexpected Cuffdiff estimate columns.")
+  preview <- strsplit(count_head[-1L], "\t", fixed = TRUE)
+  estimates <- as.numeric(unlist(lapply(preview, `[`, -1L)))
+  if (!length(estimates) || any(!is.finite(estimates))) stop("Invalid Cuffdiff estimate preview.")
   dir.create(out, recursive = TRUE)
   writeLines(c("Files published by GEO as Cuffdiff estimates.",
     paste("Observed sample-level FPKM columns:", paste(m$source_column, collapse = ", ")),
-    paste("Cuffdiff count table header:", count_header),
-    "Analysis input: per-sample FPKM. Cuffdiff count file is audited for layout only."),
+    paste("Cuffdiff count header:", paste(count_header, collapse = ", ")),
+    paste("Fractional Cuffdiff count estimates in the preview:", sum(estimates != round(estimates))),
+    "Analysis input: per-sample FPKM. Cuffdiff count estimates were not fitted."),
     file.path(out, "source_format.txt"))
   write_tsv(data.frame(source_rows = nrow(x), ensembl_gene_rows = sum(annotated),
     ambiguous_id_rows = sum(ambiguous), kept = sum(keep), complete_pairs = nrow(m) / 2),
