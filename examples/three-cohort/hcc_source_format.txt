@@ -1,0 +1,5 @@
+Files published by GEO as Cuffdiff estimates.
+Observed sample-level FPKM columns: 651N_FPKM, 651T_FPKM, 678N_FPKM, 678T_FPKM, 707N_FPKM, 707T_FPKM, 715N_FPKM, 715T_FPKM, 717N_FPKM, 717T_FPKM, 754N_FPKM, 754T_FPKM, 796N_FPKM, 796T_FPKM, 705N_FPKM, 705T_FPKM, 741N_FPKM, 741T_FPKM, 768N_FPKM, 768T_FPKM
+Cuffdiff count header: tracking_id, 651N_count, 651T_count, 678N_count, 678T_count, 705N_count, 705T_count, 707N_count, 707T_count, 715N_count, 715T_count, 717N_count, 717T_count, 741N_count, 741T_count, 754N_count, 754T_count, 768N_count, 768T_count, 796N_count, 796T_count
+Fractional Cuffdiff count estimates in the preview: 51
+Analysis input: per-sample FPKM. Cuffdiff count estimates were not fitted.

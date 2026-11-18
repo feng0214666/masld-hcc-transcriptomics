@@ -1,0 +1,4 @@
+contrast	case	reference
+nash_vs_obese	NASH	Obese
+nash_vs_nafl	NASH	NAFL
+nash_vs_normal	NASH	Normal-weight

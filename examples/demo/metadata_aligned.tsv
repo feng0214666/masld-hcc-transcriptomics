@@ -1,0 +1,13 @@
+sample_id	group	patient_id
+DEMO_01	adjacent	P01
+DEMO_02	tumor	P01
+DEMO_03	adjacent	P02
+DEMO_04	tumor	P02
+DEMO_05	adjacent	P03
+DEMO_06	tumor	P03
+DEMO_07	adjacent	P04
+DEMO_08	tumor	P04
+DEMO_09	adjacent	P05
+DEMO_10	tumor	P05
+DEMO_11	adjacent	P06
+DEMO_12	tumor	P06

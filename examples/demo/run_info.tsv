@@ -1,0 +1,7 @@
+parameter	value
+mode	synthetic
+dataset	unspecified
+command	--demo --out examples/demo
+filter	count>=10 in >=3 samples
+score_method	within-cohort mean gene z-score; >=3 genes, >=50% coverage
+R	R version 4.6.1 (2026-06-24 ucrt)

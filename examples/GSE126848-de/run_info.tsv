@@ -1,0 +1,7 @@
+parameter	value
+mode	user_counts
+dataset	GSE126848
+command	--dataset GSE126848 --counts data/processed/GSE126848/counts.tsv --metadata data/processed/GSE126848/samples.tsv --deseq2 --reference Normal-weight --case NASH --covariates sex --out results/GSE126848-de
+filter	count>=10 in >=3 samples
+score_method	within-cohort mean gene z-score; >=3 genes, >=50% coverage
+R	R version 4.3.3 (2024-02-29)

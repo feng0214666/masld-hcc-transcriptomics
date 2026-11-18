@@ -1,0 +1,3 @@
+program	requested	matched	coverage	scored
+DEMO_PROGRAM	12	12	1	TRUE
+DEMO_BACKGROUND	21	21	1	TRUE

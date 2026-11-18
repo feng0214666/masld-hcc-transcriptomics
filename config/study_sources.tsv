@@ -1,0 +1,12 @@
+file	url	sha256
+GSE126848_Gene_counts_raw.txt.gz	https://ftp.ncbi.nlm.nih.gov/geo/series/GSE126nnn/GSE126848/suppl/GSE126848_Gene_counts_raw.txt.gz	8208defed61d1eb6a727723e8882e9f690e1277478d3ac7b2fd2c56c96aa0d3d
+GSE126848_family.soft.gz	https://ftp.ncbi.nlm.nih.gov/geo/series/GSE126nnn/GSE126848/soft/GSE126848_family.soft.gz	d1e23e7e46a04907455fdf02f0e0c442e136f05222bf087ea0533a94775536a9
+GSE225740_NAFLD_RNA_counts.csv.gz	https://ftp.ncbi.nlm.nih.gov/geo/series/GSE225nnn/GSE225740/suppl/GSE225740_NAFLD_RNA_counts.csv.gz	76f1d94b92cd742e13c623835727b0ad6596f3ebde70c678877ed17667e84a44
+GSE225740_NAFLD_phenotypes.csv.gz	https://ftp.ncbi.nlm.nih.gov/geo/series/GSE225nnn/GSE225740/suppl/GSE225740_NAFLD_phenotypes.csv.gz	d0bb9cfc6d835224e260749b54460c72217437394210f6ac45f729cc6bd700d2
+GSE225740_family.soft.gz	https://ftp.ncbi.nlm.nih.gov/geo/series/GSE225nnn/GSE225740/soft/GSE225740_family.soft.gz	9edf2fe12927f6a1df266112f36c52e6b5902dc9f8a94629ec28d53735b21874
+GSE164441_RNAseq_10Tvs10NT_cuffdiff_FPKM.txt.gz	https://ftp.ncbi.nlm.nih.gov/geo/series/GSE164nnn/GSE164441/suppl/GSE164441_RNAseq_10Tvs10NT_cuffdiff_FPKM.txt.gz	0b7fb06101e749c08191c87d5b6d61507854a8665b8d89f3ebaa35ed57dc309e
+GSE164441_RNAseq_10Tvs10NT_cuffdiff_count.txt.gz	https://ftp.ncbi.nlm.nih.gov/geo/series/GSE164nnn/GSE164441/suppl/GSE164441_RNAseq_10Tvs10NT_cuffdiff_count.txt.gz	9d841525d5cceb2197b857599bf1c1b3d4bd44dc18248482979a453255d81749
+h.all.v2025.1.Hs.symbols.gmt	https://data.broadinstitute.org/gsea-msigdb/msigdb/release/2025.1.Hs/h.all.v2025.1.Hs.symbols.gmt	f22066af72e215ccb7b89d88e492c07e1eef17534c2ca7b0f9902cfecbbdd8e9
+c6.all.v2025.1.Hs.symbols.gmt	https://data.broadinstitute.org/gsea-msigdb/msigdb/release/2025.1.Hs/c6.all.v2025.1.Hs.symbols.gmt	b70990e1bb7abff88eb452321a90d4e7f5917a8024d311cde12761aad666cfd7
+Human_Ensembl_Gene_ID_MSigDB.v2025.1.Hs.chip	https://data.broadinstitute.org/gsea-msigdb/msigdb/annotations/human/Human_Ensembl_Gene_ID_MSigDB.v2025.1.Hs.chip	e69ecad742c1aa554dbf71ee981b445ffc9114e7ea369ce592d418440651ece9
+Human_NCBI_Gene_ID_MSigDB.v2025.1.Hs.chip	https://data.broadinstitute.org/gsea-msigdb/msigdb/annotations/human/Human_NCBI_Gene_ID_MSigDB.v2025.1.Hs.chip	d048aab5f0dc67dd7a02fe2aa82c0e7e48a8df790b3527dee671f433091a82dd

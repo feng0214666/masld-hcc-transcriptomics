@@ -1,0 +1,47 @@
+name: Three-cohort reproducibility
+on:
+  pull_request:
+    paths:
+      - 'R/**'
+      - 'analysis/**'
+      - 'config/**'
+      - 'data/metadata/**'
+      - 'tests/**'
+      - 'environment/**'
+      - '.github/workflows/three-cohort.yml'
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: three-cohort-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  three-cohort:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - name: Restore cached public inputs
+        uses: actions/cache@v4
+        with:
+          path: data/raw
+          key: three-cohort-public-${{ hashFiles('config/study_sources.tsv') }}
+      - name: Verify public source files against SHA-256 manifest
+        run: bash analysis/fetch_study.sh data/raw
+      - name: Build the pinned analysis environment
+        run: docker build --platform linux/amd64 --tag masld-analysis environment
+      - name: Fit and validate the three cohorts
+        run: |
+          mkdir -p results
+          docker run --rm --network none --user "$(id -u):$(id -g)" \
+            -v "$PWD:/study:ro" -v "$PWD/results:/output" -w /study masld-analysis \
+            bash -e -c 'Rscript --vanilla tests/test_deseq2.R /output/deseq2-ci
+                        Rscript --vanilla analysis/run_study.R data/raw /output/three-cohort
+                        Rscript --vanilla tests/check_study.R /output/three-cohort'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: three-cohort-results
+          path: results/three-cohort/

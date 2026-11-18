@@ -1,0 +1,5 @@
+program	set_id	collection	source_url	release	source_genes
+Fatty_acid_metabolism	HALLMARK_FATTY_ACID_METABOLISM	H	https://www.gsea-msigdb.org/gsea/msigdb/cards/HALLMARK_FATTY_ACID_METABOLISM	2025.1.Hs	158
+Adipogenesis	HALLMARK_ADIPOGENESIS	H	https://www.gsea-msigdb.org/gsea/msigdb/cards/HALLMARK_ADIPOGENESIS	2025.1.Hs	200
+Cholesterol_homeostasis	HALLMARK_CHOLESTEROL_HOMEOSTASIS	H	https://www.gsea-msigdb.org/gsea/msigdb/cards/HALLMARK_CHOLESTEROL_HOMEOSTASIS	2025.1.Hs	74
+YAP_conserved	CORDENONSI_YAP_CONSERVED_SIGNATURE	C6	https://www.gsea-msigdb.org/gsea/msigdb/cards/CORDENONSI_YAP_CONSERVED_SIGNATURE	2025.1.Hs	57

@@ -1,0 +1,4 @@
+accession	role	record_samples	input_notes	geo_url
+GSE126848	discovery	57	GSM metadata linked to raw-count columns; four-group DESeq2 model	https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE126848
+GSE225740	histology_validation	93	Entrez count rows; mapped patient phenotypes; 87 observed fibrosis stages	https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE225740
+GSE164441	paired_hcc	20	20 per-sample FPKM columns matched to 10 pairs; fractional Cuffdiff count estimates	https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE164441

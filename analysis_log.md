@@ -34,3 +34,37 @@ Do lipid-metabolic and Hippo–YAP transcriptional programs change consistently 
 ### Next step
 
 Audit the sample metadata and downloadable expression files for GSE126848, GSE225740, and GSE164441.
+
+## 2026-11-17 — Runnable workflow and cohort audit
+
+- Implemented a base-R command-line workflow for strict count/metadata validation, QC, PCA tables, user-GMT program scores and an offline HTML report.
+- Added an optional DESeq2 contrast with explicit direction and complete-pair validation. DESeq2 is not installed in the local validation environment; its integration checks are skipped there.
+- Added a GEO family SOFT metadata downloader and parser, input/code checksums and session provenance.
+- Checked GEO Series records and curated GSE164441 public sample-title pair mappings (20 samples / 10 pairs).
+- GSE164441 Cuffdiff summaries require a format/unit audit before any count-based analysis; raw sequencing data are not publicly supplied.
+- Added offline tests, a reproducible synthetic example, CI and user documentation. Synthetic expression does not establish biological findings.
+- Local GEO download attempts failed (network initialization in sandbox; timeout after network escalation). Parser tests use a small SOFT fixture; live downloading remains unverified.
+- Kept the original renv lockfile; it only locks renv, not the optional DESeq2 stack.
+
+Next: audit actual expression columns, annotation and covariates, select documented gene sets, and complete cohort-specific analyses.
+
+## 2026-11-17 — Real discovery cohort and adjusted analyses
+
+- Downloaded official GSE126848 count and SOFT files successfully. Imported 19,786 genes and 57 samples using an explicit expression-column / SOFT-description / GSM mapping with leading-zero collision checks.
+- Preserved original groups: Normal-weight 14, Obese 12, NAFL 15 and NASH 16; imported public sex labels. No gene ID conversion was performed.
+- Completed full-cohort QC: 14,190 genes retained, PC1/PC2 variance fractions approximately 24.12% / 18.59%.
+- Added explicit covariate adjustment, full-rank validation, fitted model exports, contrast-specific gene filters and DE summaries.
+- Completed actual DESeq2 NASH / Normal-weight analysis adjusted for sex in CI (R 4.3.3, DESeq2 1.42.0). Fitted 13,979 genes; 981 up and 569 down at FDR<0.05 and absolute log2FC>=1. The snapshot records source commit 2af3857fbd3ea75cd62ea97e15bad4ee46e13ee3 and run 44106406192.
+- Added independent-subject Spearman / adjusted OLS program-trait analysis, missing-trait records and BH correction. This module is tested with controlled data; GSE225740 trait analysis remains pending.
+- Base and extended checks total 61; CLI/report integration passed. Remote DESeq2 tests require the package and successfully fit paired, reverse-contrast and adjusted models.
+- Added a hoverable PCA report, sample search, real QC and DE outputs, and a browser-checked README preview.
+
+Next: curate source-verified gene programs, complete GSE225740 histology analysis, audit GSE164441 expression units, then assess cross-cohort reproducibility.
+
+## 2026-11-18 — Completed three-cohort analysis
+
+- Fixed four programs from MSigDB 2025.1.Hs, recorded source IDs and coverage, and tested competitive ranking in the discovery and HCC cohorts.
+- Fit all 57 GSE126848 samples jointly, adjusting for sex. NASH / Obese identified 823 up and 494 down; NASH / NAFL identified 63 up and 7 down under FDR < 0.05 and absolute log2FC ≥ 1.
+- Matched the GSE225740 count columns, phenotype rows and GEO records. NAS was observed in 93 samples and fibrosis in 87. The YAP signature score correlated with fibrosis (rho 0.460, 95% CI 0.265–0.624).
+- Audited the 20 GSE164441 FPKM and fractional estimate columns and matched 10 pairs. Paired limma and the offset sensitivity analysis supported lower-ranked fatty acid metabolism in tumors.
+- Locked source hashes and the analysis environment. GitHub run 44291619378 completed all three cohorts. Deposited the 24-row program summary and sensitivity results under examples/three-cohort.
