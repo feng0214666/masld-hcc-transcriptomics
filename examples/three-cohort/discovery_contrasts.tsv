@@ -1,0 +1,4 @@
+contrast	case	reference	n_case	n_reference	fitted_genes	adjusted_pvalues	up_fdr05_abs_lfc1	down_fdr05_abs_lfc1
+nash_vs_obese	NASH	Obese	16	12	14190	14178	823	494
+nash_vs_nafl	NASH	NAFL	16	15	14190	14178	63	7
+nash_vs_normal	NASH	Normal-weight	16	14	14190	14178	1001	579

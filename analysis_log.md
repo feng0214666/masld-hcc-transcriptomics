@@ -60,3 +60,11 @@ Next: audit actual expression columns, annotation and covariates, select documen
 - Added a hoverable PCA report, sample search, real QC and DE outputs, and a browser-checked README preview.
 
 Next: curate source-verified gene programs, complete GSE225740 histology analysis, audit GSE164441 expression units, then assess cross-cohort reproducibility.
+
+## 2026-11-18 — Completed three-cohort analysis
+
+- Fixed four programs from MSigDB 2025.1.Hs, recorded source IDs and coverage, and tested competitive ranking in the discovery and HCC cohorts.
+- Fit all 57 GSE126848 samples jointly, adjusting for sex. NASH / Obese identified 823 up and 494 down; NASH / NAFL identified 63 up and 7 down under FDR < 0.05 and absolute log2FC ≥ 1.
+- Matched the GSE225740 count columns, phenotype rows and GEO records. NAS was observed in 93 samples and fibrosis in 87. The YAP signature score correlated with fibrosis (rho 0.460, 95% CI 0.265–0.624).
+- Audited the 20 GSE164441 FPKM and fractional estimate columns and matched 10 pairs. Paired limma and the offset sensitivity analysis supported lower-ranked fatty acid metabolism in tumors.
+- Locked source hashes and the analysis environment. GitHub run 44291619378 completed all three cohorts. Deposited the 24-row program summary and sensitivity results under examples/three-cohort.

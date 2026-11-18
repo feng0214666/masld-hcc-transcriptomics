@@ -1,24 +1,10 @@
 # 验证记录
 
-日期：2026-11-17。本地环境：Windows，R 4.6.1。远端集成：Ubuntu 24.04，R 4.3.3，DESeq2 1.42.0。
+2026-11-18 的 [GitHub Actions 三队列运行](https://github.com/feng0214666/masld-hcc-transcriptomics/actions/runs/44291619378)成功完成。该作业从固定 Ubuntu 镜像和软件包快照构建容器，校验全部 11 个源文件的 SHA-256，并在禁用网络的分析容器内完成三队列拟合。R 4.3.3、DESeq2 1.42.0 和 limma 3.58.1 已通过运行时版本检查。
 
-## 基础与扩展检查
+- 32 项基础检查和 29 项扩展检查在本地通过。CLI 组织学流程、示例报告、输入校验和及输出覆盖保护也通过。
+- 容器内实际运行 DESeq2 的配对、反向对比和年龄调整测试，随后拟合 GSE126848 四组模型。
+- 真实数据检查覆盖发现队列 57 例、组织学队列 93/87 例、HCC 10 对的样本映射，以及 24 项程序结果的覆盖率、区间和 BH 校正家族。记录在 `tests/check_study.R`。
+- 从 GitHub 下载完整产物后核对归档 SHA-256，并用同一检查脚本复核文件。仓库中的 [结果快照](../examples/three-cohort/) 与该次运行的对应文件逐字节核对。
 
-- tests/run_tests.R：32 项基础检查通过，覆盖非法计数、ID、元数据重排、QC、PCA、评分、配对和 SOFT 解析。
-- tests/test_extended.R：29 项扩展检查通过，覆盖协变量、完全混杂、配对共线、字符 ID、组织学关联、缺失值、重复患者、显式 GEO 映射及报告转义。
-- tests/test_association_cli.R：GMT → 调整表型关联 → HTML 输出的完整 CLI 集成通过。
-- tests/check_report.R：模拟标签、报告链接、输入读回、校验和、外部 TSV 输入及输出覆盖保护通过。
-- 模拟和真实 QC 报告均在本地浏览器渲染检查。
-
-## DESeq2 与真实队列
-
-- tests/test_deseq2.R 在远端要求安装 DESeq2，禁止跳过。实际拟合完整配对、反向对比和年龄调整模型，均通过。
-- 真实 GSE126848 官方计数和 family SOFT 已下载成功；导入 19,786 个基因、57 个样本，明确检查前导零和 GSM 对应。
-- 真实 NASH / Normal-weight 的性别调整分析成功，完整结果保存至 examples/GSE126848-de。代码快照与运行链接见该目录 README。
-- 先前下载超时已通过成功获取官方文件和真实导入消除；独立 fetch_geo.R 的网络行为仍取决于运行环境。在线 CI 通过 curl 下载官方文件并验证适配器。
-
-## 尚待研究工作
-
-GSE225740 组织学实证分析、GSE164441 表达量纲适配、经过来源核验的生物学签名、跨队列综合和敏感性分析尚未完成。
-
-原 renv.lock 仅记录 renv。实际 DESeq2 版本以结果目录 sessionInfo.txt 为准；可选 Bioconductor 环境尚未完整锁定。
+[历史两组 GSE126848 验证](real_cohort_walkthrough.md)保留其原有运行出处。当前四组模型使用独立的结果目录。多模型、测序单位和版本选择见[复现指南](reproduce_three_cohort.md)。

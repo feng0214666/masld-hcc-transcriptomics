@@ -2,17 +2,17 @@ datasets:
   GSE126848:
     role: discovery
     disease_context: MASLD severity
-    status: counts_imported_qc_and_sex_adjusted_nash_contrast_completed
+    status: four_group_deseq2_and_ranked_programs
     url: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE126848
 
   GSE225740:
     role: histology_validation
     disease_context: disease activity and fibrosis
-    status: series_record_reviewed_expression_audit_pending
+    status: nas_and_fibrosis_program_associations
     url: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE225740
 
   GSE164441:
     role: cancer_evaluation
     disease_context: MASLD-associated HCC
-    status: public_pair_mapping_curated_expression_format_audit_pending
+    status: paired_fpkm_limma_and_ranked_programs
     url: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE164441

@@ -1,26 +1,33 @@
 # MASLD–HCC Transcriptomics
 
-**从脂质代谢到 Hippo–YAP：面向人肝脏公开队列的可复现转录组分析工具。**
+**在三个人肝脏公开队列中检验脂质代谢和 YAP 相关转录程序。**
 
 Cross-cohort investigation of lipid-metabolic and Hippo–YAP transcriptional programs across MASLD severity and MASLD-associated hepatocellular carcinoma.
 
 [![R workflow checks](https://github.com/feng0214666/masld-hcc-transcriptomics/actions/workflows/checks.yml/badge.svg)](https://github.com/feng0214666/masld-hcc-transcriptomics/actions/workflows/checks.yml)
+[![Three-cohort reproducibility](https://github.com/feng0214666/masld-hcc-transcriptomics/actions/workflows/three-cohort.yml/badge.svg)](https://github.com/feng0214666/masld-hcc-transcriptomics/actions/workflows/three-cohort.yml)
 [![R](https://img.shields.io/badge/R-%E2%89%A54.3-276DC3?logo=r)](https://www.r-project.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-17876f.svg)](LICENSE)
 
-本项目研究脂质代谢与 YAP/TEAD 相关转录程序在独立人肝脏队列中的变化。已完成 GSE126848 真实计数接入、57 个样本的 QC，以及调整性别的 NASH 对正常体重组差异分析；同时提供 GEO 导入、配对建模、协变量调整、程序评分、组织学关联和离线报告工具。
+三个队列覆盖四组肝活检比较、疾病活动度与纤维化关联，以及肝癌肿瘤与邻近组织的配对比较。统一使用四个固定来源的表达程序。［[程序总表](examples/three-cohort/cross_cohort_programs.tsv) · [完整运行产物](https://github.com/feng0214666/masld-hcc-transcriptomics/actions/runs/44291619378/artifacts/14420874689) · [复现指南](docs/reproduce_three_cohort.md)］
 
 ## 已完成的真实分析
 
-| 数据与分析 | 已保存结果 |
+| 队列与问题 | 主要结果 |
 |---|---|
-| GSE126848：19,786 个基因、57 个样本 | [真实 QC 报告](examples/GSE126848-qc/report.html)、PCA 坐标与样本映射 |
-| NASH 16 例 vs 正常体重组 14 例，设计 `~ sex + group` | [完整 DESeq2 结果](examples/GSE126848-de/differential_expression.tsv)、[模型矩阵](examples/GSE126848-de/model_matrix.tsv) |
-| FDR＜0.05 且绝对 log2FC≥1 | 上调 981、下调 569；[结果摘要](examples/GSE126848-de/de_summary.tsv) |
+| GSE126848 · 57 例，四组统一性别调整模型 | NASH vs 肥胖组有 823 个上调、494 个下调基因，NASH vs NAFL 有 63 个上调、7 个下调基因（FDR < 0.05，绝对 log₂FC ≥ 1）。[三个对比](examples/three-cohort/discovery_contrasts.tsv) |
+| GSE225740 · NAS 93 例，纤维化 87 例 | YAP 签名与纤维化正相关，Spearman ρ = 0.46，95% CI 0.27–0.62，FDR = 5.96 × 10⁻⁵。[组织学结果](examples/three-cohort/histology_programs.tsv) |
+| GSE164441 · 10 对肿瘤与邻近组织 | 脂肪酸代谢基因集在肿瘤中下向富集（FDR = 6.79 × 10⁻⁴），YAP 签名的 FDR 为 0.987。[配对结果](examples/three-cohort/hcc_programs.tsv) |
 
-这些数值来自指定队列和模型。[复现步骤与结果说明](docs/real_cohort_walkthrough.md)记录了输入来源、样本规模、软件版本与代码提交。程序签名的生物学验证及其他队列的独立复现仍是下一阶段工作。
+YAP 签名在 NASH vs NAFL 的主设置中上向富集（FDR = 0.00117），提高假定基因间相关性后 FDR 为 0.131。组织学和 HCC 对比的含义不同，三队列结果按各自问题解释。[方法与敏感性结果](docs/three_cohort_results.md)
 
-![真实队列报告预览](docs/assets/report-preview.png)
+## 复现完整分析
+
+```bash
+bash analysis/reproduce_study.sh results/three-cohort
+```
+
+此入口适用于已安装 R、DESeq2 和 limma 的环境。使用[锁定的 Docker 环境](docs/reproduce_three_cohort.md)可复现 GitHub Actions 的软件版本和三个分析。所有 11 个公开输入均核对 SHA-256。
 
 ## 立即运行
 
@@ -65,9 +72,9 @@ flowchart LR
 
 | 队列 | GEO 记录样本数 | 用途 | 导入前需要确认 |
 |---|---:|---|---|
-| [GSE126848](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE126848) | 57 | 正常体重、肥胖、NAFL 与 NASH 的比较 | 基因注释、表达列与 GSM 对应、原始分组 |
-| [GSE225740](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE225740) | 93 | NAS 与纤维化等组织学指标 | 保留缺失值，检查协变量与表型编码 |
-| [GSE164441](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE164441) | 20 | 10 对 NAFLD 相关 HCC 肿瘤／邻近组织 | Cuffdiff 文件结构与计数定义；原始测序数据未公开 |
+| [GSE126848](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE126848) | 57 | 正常体重、肥胖、NAFL 与 NASH 的比较 | 计数样本编号与 GEO SOFT 一一对应 |
+| [GSE225740](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE225740) | 93 | NAS 与纤维化等组织学指标 | 表型 CSV 与 GEO SOFT 相互核对，6 例缺少纤维化分期 |
+| [GSE164441](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE164441) | 20 | 10 对 NAFLD 相关 HCC 肿瘤与邻近组织 | 使用逐样本 FPKM，依据公开患者编号配对 |
 
 样本数是 GEO 记录中的规模，并非本项目最终纳入数。旧研究保留原始 NAFLD/NASH 标签；MASLD/MASH 的现代临床分类需要相应个体资料支持。详见 [队列审查记录](docs/cohort_audit.md)。
 
@@ -85,7 +92,7 @@ Rscript --vanilla analysis/fetch_geo.R GSE126848 data/metadata/GSE126848_run1
 Rscript --vanilla analysis/run.R --counts data/processed/counts.tsv --metadata data/metadata/samples.tsv --out results/cohort-qc
 ```
 
-可选地通过 `--gmt config/programs.gmt` 加入自行核定来源与版本的基因集。演示基因集只包含 `DEMO_GENE_*`；项目尚未提供经过文献核验的 YAP 活性签名。
+可通过 `--gmt programs.gmt` 加入与输入使用相同 gene ID 的基因集。三队列分析另用[固定版本的四个程序](config/programs.tsv)和相应 ID 映射。
 
 差异分析前先安装 Bioconductor 的 DESeq2：
 
@@ -108,13 +115,13 @@ Rscript --vanilla analysis/run.R --counts counts.tsv --metadata samples.tsv --gm
 
 不提供 `--covariates` 时计算 Spearman 相关；提供时拟合 OLS 并输出每单位表型对应的分数变化、95% CI 和 BH 校正 p 值。同一患者重复采样会被拒绝，需另行采用适当的重复测量模型。
 
-## 方法与复现
+## 通用计数入口的方法
 
 - QC 使用 count ≥10 且至少 3 个样本满足的过滤规则，基于全部输入基因的文库大小计算 log2(CPM+1)，再进行中心化 PCA。
 - 程序评分为队列内各基因标准化后的均值；至少匹配 3 个非恒定基因且覆盖率 ≥50%。这是描述性评分，不等同于 GSVA、ssGSEA 或富集显著性检验。
 - DESeq2 使用选定对比的整数计数和相同过滤阈值，输出 Wald 检验及 BH 调整结果；独立过滤等因素产生的 NA 保留。未进行 LFC 收缩。
-- 每个队列独立分析。程序关联的 BH 校正范围是该次运行、该表型成功检验的程序集合；多个表型的整体检验家族需另行预设。跨队列程序评分不能直接当作统一标尺比较；综合效应和异质性分析尚待实现。
-- 基础工作流使用 `--vanilla` 避免首次启动自动下载 renv。原有 `renv.lock` 仅记录 renv，**尚未锁定可选 DESeq2 环境**。安装并验证完整分析依赖后，使用 `renv::snapshot()` 更新锁文件；每次运行同时保存实际 R 会话版本。
+- 通用程序关联的 BH 校正范围是单次运行的单个表型。三队列研究的校正家族和具体方法见[复现指南](docs/reproduce_three_cohort.md)。
+- 基础工作流使用 `--vanilla`，适合独立运行通用脚本。三队列环境由 `environment/` 内的 Docker 文件锁定，程序同时保存实际 R 会话和安装包版本。
 
 ## 文件导航
 
@@ -124,18 +131,25 @@ R/associations.R             数值表型关联、协变量调整与检验状态
 R/import_geo.R               GSE126848 公开计数的显式编号映射
 R/report_widgets.R           离线 PCA 交互视图
 R/geo.R                      GEO SOFT 下载及解析
+R/discovery.R                四组 DESeq2 对比
+R/histology.R                组织学样本映射与程序相关
+R/hcc_paired.R               Cuffdiff 审查与配对 limma 模型
+R/program_analysis.R         固定基因集映射和秩检验
 analysis/run.R               分析命令行入口
+analysis/reproduce_study.sh  三队列复现入口
 analysis/fetch_geo.R         GEO 元数据命令行入口
-config/cohorts.tsv           已核对的候选队列概览
+config/study_sources.tsv     GEO / MSigDB 下载源和 SHA-256
+environment/                 锁定的 R / Bioconductor 容器
 data/metadata/GSE164441_pairs.tsv  公开的 10 对样本对应表
 docs/                        输入说明、方法和队列审查
 examples/demo/               已运行的模拟示例与输出
 examples/GSE126848-qc/       真实队列 QC 与来源映射
 examples/GSE126848-de/       已完成的真实 DESeq2 分析快照
+examples/three-cohort/      三队列程序结果、样本统计与运行出处
 tests/run_tests.R            输入边界、设计、评分和解析检查
 .github/workflows/checks.yml CI 与示例报告产物
 ```
 
-[分析日志](analysis_log.md)记录研究决策；[研究方案](docs/study_protocol.md)说明后续验证顺序。代码采用 [MIT License](LICENSE)。
+[研究方案](docs/three_cohort_plan.md)说明对比与基因集选择。[GSE126848 交互 QC](examples/GSE126848-qc/report.html)可下载后查看样本 PCA。代码采用 [MIT License](LICENSE)。
 
 本项目输出为研究分析结果。横断面关联不直接证明纵向进展或因果关系；转录签名也不直接测量 YAP 核定位、蛋白活性或棕榈酰化。
