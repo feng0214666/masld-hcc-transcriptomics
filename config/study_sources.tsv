@@ -1,0 +1,12 @@
+file	url	sha256
+GSE126848_Gene_counts_raw.txt.gz	https://ftp.ncbi.nlm.nih.gov/geo/series/GSE126nnn/GSE126848/suppl/GSE126848_Gene_counts_raw.txt.gz	pending
+GSE126848_family.soft.gz	https://ftp.ncbi.nlm.nih.gov/geo/series/GSE126nnn/GSE126848/soft/GSE126848_family.soft.gz	pending
+GSE225740_NAFLD_RNA_counts.csv.gz	https://ftp.ncbi.nlm.nih.gov/geo/series/GSE225nnn/GSE225740/suppl/GSE225740_NAFLD_RNA_counts.csv.gz	pending
+GSE225740_NAFLD_phenotypes.csv.gz	https://ftp.ncbi.nlm.nih.gov/geo/series/GSE225nnn/GSE225740/suppl/GSE225740_NAFLD_phenotypes.csv.gz	pending
+GSE225740_family.soft.gz	https://ftp.ncbi.nlm.nih.gov/geo/series/GSE225nnn/GSE225740/soft/GSE225740_family.soft.gz	pending
+GSE164441_RNAseq_10Tvs10NT_cuffdiff_FPKM.txt.gz	https://ftp.ncbi.nlm.nih.gov/geo/series/GSE164nnn/GSE164441/suppl/GSE164441_RNAseq_10Tvs10NT_cuffdiff_FPKM.txt.gz	pending
+GSE164441_RNAseq_10Tvs10NT_cuffdiff_count.txt.gz	https://ftp.ncbi.nlm.nih.gov/geo/series/GSE164nnn/GSE164441/suppl/GSE164441_RNAseq_10Tvs10NT_cuffdiff_count.txt.gz	pending
+h.all.v2025.1.Hs.symbols.gmt	https://data.broadinstitute.org/gsea-msigdb/msigdb/release/2025.1.Hs/h.all.v2025.1.Hs.symbols.gmt	pending
+c6.all.v2025.1.Hs.symbols.gmt	https://data.broadinstitute.org/gsea-msigdb/msigdb/release/2025.1.Hs/c6.all.v2025.1.Hs.symbols.gmt	pending
+Human_Ensembl_Gene_ID_MSigDB.v2025.1.Hs.chip	https://data.broadinstitute.org/gsea-msigdb/msigdb/annotations/human/Human_Ensembl_Gene_ID_MSigDB.v2025.1.Hs.chip	pending
+Human_NCBI_Gene_ID_MSigDB.v2025.1.Hs.chip	https://data.broadinstitute.org/gsea-msigdb/msigdb/annotations/human/Human_NCBI_Gene_ID_MSigDB.v2025.1.Hs.chip	pending
